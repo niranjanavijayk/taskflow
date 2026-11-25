@@ -1,101 +1,130 @@
 # TaskFlow
 
-A small task manager built with **Angular 21** for the State Management assessment.
-The goal is to answer one question for every piece of data: **who owns it?**
-State is handled only with signals, signal services, the URL and reactive forms. There is no NgRx and no RxJS Subjects.
+TaskFlow is a small task management application built with **Angular 21** as part of the State Management assessment. The project is organised around a single question: **who owns each piece of data?** State is managed with signals, signal services, the URL and reactive forms. NgRx and RxJS Subjects are not used.
+
+## Contents
+
+1. [Running the application](#a-running-the-application)
+2. [Approach](#approach)
+3. [Feature implementation](#feature-implementation)
+4. [Rule compliance](#rule-compliance)
+5. [Design](#design)
+6. [Use of AI tools](#use-of-ai-tools)
+7. [Screenshots](#screenshots)
+8. [State table](#b-state-table)
+9. [Review of the sample code](#c-problems-in-the-review-code)
+10. [Project structure](#project-structure)
 
 ---
 
-## A. How to run the app
+## A. Running the application
+
+**Requirements:** Node.js 20.19 or later.
 
 ```bash
 npm install
-ng serve          # or: npm start
+ng serve        # or: npm start
 ```
 
-Open http://localhost:4200 (Node 20.19 or newer is required).
+The application is served at http://localhost:4200.
 
 ---
 
-## How I built it
+## Approach
 
-### 1. Planning the state first (before writing code)
+### State planning
 
-Before coding I listed every piece of data and asked the four questions from the session:
+The state was planned before any code was written. Each piece of data was evaluated against four questions:
 
-1. Does anyone besides this component need it? (Level 1 component, Level 2 parent, Level 3 service)
-2. Should it survive a refresh or be shareable as a link? (URL)
-3. Is it a copy of backend data? (Server state: loading and caching)
-4. Can it be calculated from other state? (`computed()`, never stored)
+1. **Who needs it?** A single component (Level 1), sibling components through a parent (Level 2), or distant components through a service (Level 3).
+2. **Should it survive a refresh or be shareable?** If so, it belongs in the URL.
+3. **Is it a copy of backend data?** If so, it is server state, with loading handled and the result cached.
+4. **Can it be calculated from other state?** If so, it is exposed with `computed()` and never stored.
 
-The answers are in the state table in section B. I wrote the code only after the plan was done.
+The outcome of this plan is recorded in the [state table](#b-state-table).
 
-### 2. Project setup
+### Project setup
 
-- Created the project with `ng new taskflow` (Angular 21, standalone components, routing, CSS).
-- Folder layout: `core/` (services and model), `layout/` (top bar), `tasks/` (list, details, edit, parent page), `settings/`.
-- Enabled `withComponentInputBinding()` in `app.config.ts` so route params and query params arrive as component `input()`s.
+- Generated with the Angular CLI (Angular 21, standalone components, routing, CSS).
+- `withComponentInputBinding()` is enabled in `app.config.ts`, so route parameters and query parameters are delivered to components as `input()` values.
+- Source is grouped by responsibility: `core/` (model and services), `layout/` (top bar), `tasks/` (list, details, edit and the parent page) and `settings/`.
 
-### 3. Feature by feature
+---
 
-| # | Requirement | How I implemented it |
-|---|-------------|----------------------|
-| 0 | Mock `TaskService` with ~10 tasks and a delay | `core/task.service.ts` holds 10 seed tasks. `fetch()` waits 800 ms with `setTimeout` and then sets the tasks, as if they came from an API. `load()` returns the same promise on later calls, so the list is fetched once (cache). Due dates are generated relative to today, so some tasks are always overdue. |
-| 1 | Top bar on every page, with user name and "X overdue" | `layout/top-bar.ts` sits in the root `App` template above `<router-outlet>`, so it shows on every route. It reads `TaskService.overdueCount()` and `UserService.name()` directly. `App` calls `load()` on start so the count is correct even on the Settings page. |
-| 2 | Loading message | `TaskService` exposes a read-only `loading` signal. `TaskList` shows "Loading tasks…" while it is true. |
-| 3 | Search that survives a refresh | The search text is stored in the URL as `?q=`. `TasksPage` receives it as a route input. The list shows the value and emits `qChange`. The parent updates the URL with `router.navigate` (`queryParamsHandling: 'merge'`, `replaceUrl: true`). Because the URL owns it, a refresh brings it back. |
-| 4 | Status tabs: All, Open, Done | Same pattern as search, using `?status=open` or `?status=done`. Invalid values fall back to `all`. |
-| 5 | Compact-view toggle | A `compact` signal inside `TaskList` (Level 1). Only the list needs it, so it does not go anywhere higher. It adds a `compact` CSS class that makes rows smaller. |
-| 6 | Click a task to highlight it and show details | `TasksPage` owns `selectedId` (a signal) because the list and the details panel are siblings (Level 2). It passes `selectedId` to the list with `input()` and receives clicks with `output()`. `selected` is a `computed()` that finds the task in the service, so the panel always shows fresh data. |
-| 7 | "Mark as done" updates the top bar immediately | The button calls `TaskService.markDone(id)`, which updates the private signal. `overdueCount` is a `computed()` from the same signal, so the top bar recalculates by itself. Nothing is copied or synced. |
-| 8 | Edit form with unsaved-changes warning | `edit-task.ts` uses a reactive `FormGroup` (title, due date, status) with validators. A functional `canDeactivate` guard checks `form.dirty` and asks `confirm()` before leaving. After a successful save the form is marked pristine, so there is no warning. The task id comes from the URL (`:id`). |
-| 9 | Settings shows the same user name | `settings-page.ts` reads `UserService.name()`, the same signal the top bar reads. There is one owner and two readers. |
+## Feature implementation
 
-### 4. How I followed the rules
+| # | Requirement | Implementation |
+|---|-------------|----------------|
+| 0 | Mock `TaskService` with about 10 tasks and a short delay | `core/task.service.ts` provides 10 seed tasks. An internal `fetch()` waits 800 ms before setting the data, simulating an API call. `load()` returns the same promise on repeated calls, so tasks are fetched once and cached. Due dates are generated relative to the current date, so overdue tasks are always present. |
+| 1 | Top bar on every page showing the user name and "X overdue" | `layout/top-bar.ts` is placed in the root `App` template above `<router-outlet>`, so it appears on every route. It reads `TaskService.overdueCount()` and `UserService.name()` directly. `App` triggers `load()` on start so the count is correct on any page. |
+| 2 | Loading message on the Tasks page | `TaskService` exposes a read-only `loading` signal. `TaskList` displays "Loading tasks…" while it is `true`. |
+| 3 | Search that persists after refresh | The search text is stored in the URL as `?q=`. `TasksPage` receives it as a route input and passes it to the list. The list emits `qChange`, and the parent updates the URL with `router.navigate` (`queryParamsHandling: 'merge'`, `replaceUrl: true`). Because the URL is the owner, a refresh restores the value. |
+| 4 | Status tabs: All, Open, Done | Implemented in the same way as search, using `?status=open` and `?status=done`. Unrecognised values fall back to `all`. |
+| 5 | Compact-view toggle | A `compact` signal inside `TaskList` (Level 1). Only the list requires it, so it is not lifted. It applies a CSS class that reduces row size. |
+| 6 | Click a task to highlight it and show its details | `TasksPage` owns the `selectedId` signal, since the list and the details panel are siblings (Level 2). It is passed down with `input()` and updated through `output()`. `selected` is a `computed()` that looks up the task in the service, so the panel always shows current data. |
+| 7 | "Mark as done" updates the top bar immediately | The button calls `TaskService.markDone(id)`, which updates the private signal. `overdueCount` is a `computed()` over the same signal, so the top bar recalculates automatically. No value is copied or synchronised. |
+| 8 | Edit form with unsaved-changes warning | `tasks/edit-task.ts` uses a reactive `FormGroup` (title, due date, status) with validators. A functional `canDeactivate` guard reads `form.dirty` and asks for confirmation before leaving. After a successful save the form is marked pristine, so no warning is shown. The task id comes from the URL (`:id`). |
+| 9 | Settings page shows the same user name | `settings/settings-page.ts` reads `UserService.name()`, the same signal used by the top bar: one owner, two readers. |
 
-| Rule | How |
-|------|-----|
-| Use signals, no NgRx, no Subjects | Only `signal`, `computed`, `input` and `output` are used. No `Subject` or `BehaviorSubject` and no NgRx anywhere. |
-| Private writable signals, exposed with `asReadonly()` | `TaskService` has private `_tasks` and `_loading`, and `UserService` has a private `_name`. Public versions are `.asReadonly()`. |
-| Only service methods change state | The only writers are `markDone()` and `update()` (and the internal `fetch()`). Components never call `.set()` on service state. |
-| Derived values use `computed()` | `overdueCount` (service), `visible` (list), `selected` (parent page), `task` (edit page). |
-| No `effect()` that copies one signal to another | There is no `effect()` in the project. |
-| Reactive forms, no extra form signals | The edit form uses `FormGroup`. Dirty and valid state are read from the form itself. |
+---
 
-### 5. Design
+## Rule compliance
 
-Dark navy theme with light text (high contrast) and a soft blue accent. Overdue items use a coral outline and done items use a green outline, so the state is not shown by colour alone. Keyboard focus is clearly visible and the layout collapses to one column on small screens.
+| Rule | Implementation |
+|------|----------------|
+| Use signals; no NgRx; no RxJS Subjects | Only `signal`, `computed`, `input` and `output` are used for state. There are no Subjects and no NgRx. |
+| Writable signals are private and exposed with `asReadonly()` | `TaskService` keeps `_tasks` and `_loading` private, and `UserService` keeps `_name` private. Public members are created with `.asReadonly()`. |
+| Only service methods change state | State is changed only by `markDone()`, `update()` and the internal `fetch()`. Components never call `.set()` on service state. |
+| Calculated values use `computed()` | `overdueCount` (service), `visible` (list), `selected` (parent page) and `task` (edit page). |
+| No `effect()` that copies one signal into another | The project contains no `effect()`. |
+| Reactive forms; no extra signals for form state | The edit form is a `FormGroup`. Dirty and valid state are read from the form itself. |
 
-### 6. How I used AI
+---
 
-I used an AI assistant to help plan and review the work. I described the features and first asked for a state plan (kind, owner, level) before any code. I then checked the result against the review checklist from the session (no duplicated data, no public writable signals, no stored values that should be `computed()`, no `effect()` copying signals, no NgRx or Subjects). I also read through the code and ran the app to confirm every feature works.
+## Design
+
+The interface uses a dark navy theme with light text for strong contrast and a soft blue accent. Overdue items use a coral outline and completed items a green outline, so status is not conveyed by colour alone. Keyboard focus is clearly visible, and the layout collapses to a single column on small screens.
+
+---
+
+## Use of AI tools
+
+AI tooling was used to support planning and review. The feature set was described first and a state plan (kind, owner, level) was requested before any code. The generated code was then checked against the review checklist from the session: no duplicated data, no public writable signals, no stored values that should be `computed()`, no `effect()` copying signals, and no NgRx or Subjects. All features were verified manually in the running application.
 
 ---
 
 ## Screenshots
 
 **Tasks page while loading**
-![Loading](docs/screenshots/01-tasks-loading.png)
 
-**Task list with an overdue count in the top bar**
-![List](docs/screenshots/02-tasks-list.png)
+![Loading state](docs/screenshots/01-tasks-loading.png)
 
-**Search and status tab stored in the URL (`?q=...&status=open`)**
-![Search](docs/screenshots/03-search-url.png)
+**Task list with the overdue count in the top bar**
 
-**Selected task highlighted with the details panel**
-![Details](docs/screenshots/04-details.png)
+![Task list](docs/screenshots/02-tasks-list.png)
 
-**After "Mark as done": the overdue count in the top bar went down**
-![Mark done](docs/screenshots/05-mark-done.png)
+**Search text and status tab stored in the URL (`?q=...&status=...`)**
+
+![Search in URL](docs/screenshots/03-search-url.png)
+
+**Selected task highlighted, with the details panel**
+
+![Details panel](docs/screenshots/04-details.png)
+
+**After "Mark as done": the overdue count has decreased**
+
+![Mark as done](docs/screenshots/05-mark-done.png)
 
 **Compact view**
-![Compact](docs/screenshots/06-compact.png)
+
+![Compact view](docs/screenshots/06-compact.png)
 
 **Edit task page with the unsaved-changes warning**
-![Edit warning](docs/screenshots/07-edit-warning.png)
+
+![Unsaved changes warning](docs/screenshots/07-edit-warning.png)
 
 **Settings page showing the same user name as the top bar**
+
 ![Settings](docs/screenshots/08-settings.png)
 
 ---
@@ -104,8 +133,8 @@ I used an AI assistant to help plan and review the work. I described the feature
 
 | # | Data | Kind | Where it lives | Why |
 |---|------|------|----------------|-----|
-| 1 | Search text | URL | `?q=` query param, bound into `TasksPage` through a route input | It must survive a refresh, so the URL owns it and the list only reads it. |
-| 2 | Selected status tab | URL | `?status=` query param, bound into `TasksPage` | It is a shareable view of the list, so it follows the same rule as search. |
+| 1 | Search text | URL | `?q=` query parameter, bound into `TasksPage` through a route input | It must survive a refresh, so the URL owns it and the list only reads it. |
+| 2 | Selected status tab | URL | `?status=` query parameter, bound into `TasksPage` | It is a shareable view of the list, so it follows the same rule as search. |
 | 3 | Compact view on/off | Local UI | `compact` signal inside `TaskList` (Level 1) | Only the list uses it, so it stays in the component. |
 | 4 | Task list from the API | Server | `TaskService` (root), private `_tasks` signal exposed with `asReadonly()` | It is a copy of backend data used by the top bar, list, details and edit page; the service also holds `loading` and caches the first load. |
 | 5 | Selected task | Local UI | `selectedId` signal in `TasksPage` (Level 2); the task itself is a `computed()` | The list highlights it and the details panel shows it, so the shared parent owns it and passes it down with `input()` and `output()`. |
@@ -117,10 +146,10 @@ I used an AI assistant to help plan and review the work. I described the feature
 
 ## C. Problems in the review code
 
-1. **Stored copy of a derived value.** `overdueCount` is a separate `signal(0)` set inside `load()`. It is calculated from `tasks`, so it goes stale when a task changes (for example "Mark as done"). My app uses `overdueCount = computed(...)` in `TaskService`.
-2. **Public writable signals.** `tasks` and `overdueCount` can be changed with `.set()` by any component, so a wrong value could come from anywhere. My services keep writable signals private, expose `asReadonly()`, and change state only through methods such as `markDone()` and `update()`.
-3. **`effect()` copying one signal into another.** `TopBarComponent` copies `overdueCount` into `countSig`, which creates a second copy of the same data. My top bar reads `TaskService.overdueCount()` directly in the template.
-4. **Server state without loading or caching.** `load()` has no loading flag and nothing stops it from fetching again on every call, and it trusts a server-supplied `isOverdue` flag that becomes wrong as time passes. My service has a `loading` signal, loads once, and calculates overdue from the due date and status.
+1. **Stored copy of a derived value.** `overdueCount` is a separate `signal(0)` set inside `load()`. It is calculated from `tasks`, so it becomes stale whenever a task changes (for example "Mark as done"). TaskFlow defines `overdueCount = computed(...)` in `TaskService`.
+2. **Public writable signals.** `tasks` and `overdueCount` can be changed with `.set()` by any component, so an incorrect value could originate anywhere. TaskFlow keeps writable signals private, exposes `asReadonly()`, and changes state only through methods such as `markDone()` and `update()`.
+3. **`effect()` copying one signal into another.** `TopBarComponent` copies `overdueCount` into `countSig`, creating a second copy of the same data. TaskFlow's top bar reads `TaskService.overdueCount()` directly in its template.
+4. **Server state without loading or caching.** `load()` has no loading flag, nothing prevents repeated fetching, and it relies on a server-supplied `isOverdue` flag that becomes inaccurate as time passes. TaskFlow's service exposes a `loading` signal, loads once, and calculates overdue status from the due date and task status.
 
 ---
 
