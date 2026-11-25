@@ -9,11 +9,10 @@ TaskFlow is a small task management application built with **Angular 21** as par
 3. [Feature implementation](#feature-implementation)
 4. [Rule compliance](#rule-compliance)
 5. [Design](#design)
-6. [Use of AI tools](#use-of-ai-tools)
-7. [Screenshots](#screenshots)
-8. [State table](#b-state-table)
-9. [Review of the sample code](#c-problems-in-the-review-code)
-10. [Project structure](#project-structure)
+6. [Screenshots](#screenshots)
+7. [State table](#b-state-table)
+8. [Review of the sample code](#c-problems-in-the-review-code)
+9. [Project structure](#project-structure)
 
 ---
 
@@ -84,12 +83,6 @@ The outcome of this plan is recorded in the [state table](#b-state-table).
 ## Design
 
 The interface uses a dark navy theme with light text for strong contrast and a soft blue accent. Overdue items use a coral outline and completed items a green outline, so status is not conveyed by colour alone. Keyboard focus is clearly visible, and the layout collapses to a single column on small screens.
-
----
-
-## Use of AI tools
-
-AI tooling was used to support planning and review. The feature set was described first and a state plan (kind, owner, level) was requested before any code. The generated code was then checked against the review checklist from the session: no duplicated data, no public writable signals, no stored values that should be `computed()`, no `effect()` copying signals, and no NgRx or Subjects. All features were verified manually in the running application.
 
 ---
 
