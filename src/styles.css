@@ -1,0 +1,62 @@
+:root {
+  --bg: #141a26; --surface: #1d2535; --raised: #27324a; --line: #3b4866;
+  --text: #f1f4fa; --muted: #c0cadc; --accent: #8fb8ff; --accent-ink: #0d1424;
+  --late: #ff9a8f; --ok: #86e3b5;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, "Segoe UI", Roboto, sans-serif; }
+h2 { margin: 0 0 .5rem; font-size: 1.35rem; }
+a { color: var(--accent); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.topbar { display: flex; align-items: center; gap: 1.5rem; padding: .75rem 1.5rem; background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+.brand { font-size: 1.25rem; letter-spacing: .02em; }
+.topbar nav { display: flex; gap: .5rem; flex: 1; }
+.topbar nav a { color: var(--muted); text-decoration: none; padding: .35rem .8rem; border-radius: 8px; }
+.topbar nav a.active { background: var(--raised); color: var(--text); }
+.who { display: flex; align-items: center; gap: .9rem; font-weight: 600; }
+.badge { padding: .2rem .7rem; border-radius: 999px; background: var(--raised); color: var(--text); font-size: .9rem; }
+.badge.warn { background: #5a2a2c; color: var(--late); border: 1px solid var(--late); }
+
+main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+.split { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.25rem; align-items: start; }
+@media (max-width: 800px) { .split { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1.25rem; }
+.narrow { max-width: 520px; }
+.note { color: var(--muted); }
+
+.controls { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: .9rem; }
+input, select { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: .55rem .75rem; font: inherit; }
+input[type=search] { flex: 1; min-width: 180px; }
+input::placeholder { color: var(--muted); }
+.toggle { display: flex; align-items: center; gap: .4rem; color: var(--muted); cursor: pointer; }
+.toggle input { width: 1.1rem; height: 1.1rem; accent-color: var(--accent); padding: 0; }
+
+.tabs { display: flex; gap: .4rem; margin-bottom: .9rem; }
+.tabs button { text-transform: capitalize; background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; padding: .35rem 1rem; font: inherit; cursor: pointer; }
+.tabs button.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+
+.rows { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.row { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 1rem; text-align: left; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: .8rem 1rem; font: inherit; cursor: pointer; }
+.row:hover { border-color: var(--accent); }
+.row.selected { background: var(--raised); border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+.compact .row { padding: .3rem .75rem; font-size: .9rem; }
+.compact { gap: .25rem; }
+.meta { display: flex; gap: .5rem; align-items: center; color: var(--muted); font-size: .85rem; white-space: nowrap; }
+.tag { padding: .1rem .6rem; border-radius: 999px; background: var(--raised); color: var(--text); text-transform: capitalize; font-size: .8rem; }
+.tag.ok { color: var(--ok); border: 1px solid var(--ok); background: transparent; }
+.tag.late { color: var(--late); border: 1px solid var(--late); background: transparent; }
+
+dl { display: grid; grid-template-columns: auto 1fr; gap: .4rem 1rem; margin: 1rem 0; }
+dt { color: var(--muted); } dd { margin: 0; text-transform: capitalize; }
+.actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: 1rem; }
+button.primary, .btn { border-radius: 8px; padding: .55rem 1.1rem; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; border: 1px solid var(--accent); }
+button.primary { background: var(--accent); color: var(--accent-ink); }
+button.primary:disabled { background: var(--raised); color: var(--muted); border-color: var(--line); cursor: not-allowed; }
+.btn { color: var(--accent); background: transparent; }
+
+form { display: grid; gap: 1rem; }
+form label { display: grid; gap: .3rem; color: var(--muted); }
+form input, form select { color: var(--text); }
+.error { color: var(--late); margin: -.5rem 0 0; }
