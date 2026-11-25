@@ -92,33 +92,49 @@ The interface uses a dark navy theme with light text for strong contrast and a s
 
 ![Loading state](docs/screenshots/01-tasks-loading.png)
 
+*Figure 1. A loading message is shown while `TaskService` simulates the API delay (requirement 2).*
+
 **Task list with the overdue count in the top bar**
 
 ![Task list](docs/screenshots/02-tasks-list.png)
+
+*Figure 2. The top bar shows the user name and the overdue count on every page; overdue tasks are tagged in the list (requirements 1 and 2).*
 
 **Search text and status tab stored in the URL (`?q=...&status=...`)**
 
 ![Search in URL](docs/screenshots/03-search-url.png)
 
+*Figure 3. Search text and the status tab are stored in the URL, so they remain after a refresh (requirements 3 and 4).*
+
 **Selected task highlighted, with the details panel**
 
 ![Details panel](docs/screenshots/04-details.png)
+
+*Figure 4. The selected task is highlighted in the list and its details appear in the panel (requirement 6).*
 
 **After "Mark as done": the overdue count has decreased**
 
 ![Mark as done](docs/screenshots/05-mark-done.png)
 
+*Figure 5. "Mark as done" updates the overdue count in the top bar immediately, because the count is a `computed()` value (requirement 7).*
+
 **Compact view**
 
 ![Compact view](docs/screenshots/06-compact.png)
+
+*Figure 6. Compact view reduces row size; this state is local to the task list (requirement 5).*
 
 **Edit task page with the unsaved-changes warning**
 
 ![Unsaved changes warning](docs/screenshots/07-edit-warning.png)
 
+*Figure 7. Leaving the Edit task page with unsaved changes triggers a confirmation, based on the form's `dirty` state (requirement 8).*
+
 **Settings page showing the same user name as the top bar**
 
 ![Settings](docs/screenshots/08-settings.png)
+
+*Figure 8. The Settings page reads the same `UserService` signal as the top bar, so the name matches (requirement 9).*
 
 ---
 
